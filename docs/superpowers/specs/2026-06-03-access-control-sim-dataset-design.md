@@ -33,6 +33,12 @@ in Python (cf. Stanford *Generative Agents*, DeepMind *Concordia*).
 
 One engine + one rich schema serves both; we ship a starter eval harness for each.
 
+**North-star (v2):** v1's deterministic engine is the foundation for a **model-agnostic
+adversarial arena** — 3–4 different models assigned to red/blue roles, competing with
+the engine as incorruptible referee, producing a reproducible leaderboard ("which model
+is the best insider threat, and which is the best at catching one"). See §14. v1 is
+unchanged and is what makes the arena trustworthy rather than vibes.
+
 ---
 
 ## 2. Non-Goals (YAGNI for v1)
@@ -47,7 +53,10 @@ One engine + one rich schema serves both; we ship a starter eval harness for eac
   summary is sufficient. (Interface still allows adding it later if a future
   long-run scenario ever needs it.)
 - No online/in-loop detector in v1 — detection runs **offline** on recorded logs.
-- No multi-model orchestration / no cloud APIs required to run the default scenario.
+- No multi-model orchestration or cloud APIs in v1 — the default scenario runs on a
+  single local model. (The multi-model adversarial **arena** is the v2 north-star; §14.)
+- No inter-agent messaging in v1 — agents act on the world, not on each other. (Messaging,
+  and the social-engineering attack surface it opens, is v2; §14.)
 
 ---
 
@@ -210,8 +219,18 @@ Two subtleties this makes explicit:
 - **`agent_safety.py`** — from full events → per-model **violation rate**, **leak rate**,
   **escalation-attempt count**, broken down by agent role and `risk_propensity`.
   Enables "which model best respects least-privilege under temptation."
+- **`quality.py` (generation-quality gate)** — objective, deterministic metrics that
+  **gate a run** so slop never enters a published dataset: lexical diversity
+  (distinct-1/distinct-2, type-token ratio), n-gram repetition / self-BLEU,
+  degenerate-loop detection (identical actions repeated), per-agent action-sequence
+  entropy, and **behavioral validity** (does malicious-agent action distribution
+  measurably diverge from benign? — no divergence means no signal). Thresholds reject
+  sloppy runs automatically; a human transcript read is a *final* sanity check on a
+  green gate, never the gate itself. **LLM-as-judge** is an optional layer on top
+  (coherence / persona-adherence scoring), not the baseline. This replaces eyeballing
+  as the quality story — manual spot-check alone is not benchmark-grade QC.
 
-Both emit a metrics table (markdown + JSON) so results are copy-pasteable into a README.
+All emit a metrics table (markdown + JSON) so results are copy-pasteable into a README.
 
 ---
 
@@ -253,13 +272,17 @@ Built in two steps so the first working artifact needs no model at all:
 **Step 1 — first real run:**
 - Swap `MockProvider` → `OllamaProvider` (one local model), last-N + rolling-summary
   memory, the 5-agent cast (incl. malicious "Insider Eve") + 4 data stores.
-- **~20–30 ticks.** Spot-check transcripts for coherence (see exit criterion).
+- **~20–30 ticks.**
+- `evals/quality.py` gates the run on objective diversity/repetition/slop +
+  behavioral-validity metrics (§7).
 - README documents: what it is, `tessera run`, the schema/three-views, and how to
   fork/extend.
 
-**Exit criterion before scaling:** spot-check the generated transcripts — are agent
-behaviors coherent and non-repetitive enough to be dataset-grade with the chosen local
-model? If not, adjust model/prompt/action-space *before* scaling ticks or agents.
+**Exit criterion before scaling:** the run must pass the automated **quality gate**
+(`evals/quality.py` — diversity/repetition/slop/behavioral-validity thresholds; optional
+LLM-judge). The human transcript read is a final sanity check on top of a green gate, not
+the gate itself. If a run fails the gate, adjust model/prompt/action-space *before*
+scaling ticks or agents.
 
 ---
 
@@ -289,11 +312,13 @@ tessera/
 
 ## 12. Future / Out of Scope for Now
 
+> The **adversarial arena** (multi-model red/blue + agent comms) graduated from this
+> list into a defined **v2** — see §14. The items below remain genuinely speculative.
+
 - Longer runs / more agents / more scenarios (just bigger config; only pursue if
   the dataset is more useful for it, not for its own sake).
 - Embedding/salience memory retrieval — only if a genuinely long-horizon scenario
   is added later (interface already allows it).
-- Online in-loop detector + a "blue-team-in-the-loop" reactive scenario.
 - Resurrect the React app as a JSONL replay/scrubbing viewer.
 - Additional scenarios (multi-tenant, supply-chain, privilege-creep over time).
 - Publish to HuggingFace Hub with a dataset card.
@@ -313,3 +338,82 @@ tessera/
 | New repo | Fresh sibling dir | Old TS dir holds a Gemini key in `.env.local`; keep it out of git |
 | Name | `tessera` | Roman access-token + mosaic tile; apt, distinctive, not a security-vendor cliché |
 | v1 size | Mock 10-tick smoke run, then 20–30-tick real run | First artifact needs no model; keeps it weekend-scale |
+| Quality QC | Automated gate (`quality.py`) + optional LLM-judge | Manual eyeballing isn't benchmark-grade; objective repetition/slop/divergence metrics gate runs |
+| Arena (v2) | Full adversarial + agent comms | Competitive, model-agnostic, genuinely novel (multi-agent prompt injection *with* ground truth); §14 |
+| Manipulation label | Deterministic (engine), judge for soft layer | Keeps tier-3 objective: "blue approved an escalation enabling a violation" is a hard label |
+| Inference (v2) | OpenRouter primary; HF + Ollama drop-in | Model-agnostic via one API; local tier for free dry-runs |
+
+---
+
+## 14. v2 — The Adversarial Arena (north-star)
+
+v1 builds the trustworthy engine. v2 turns it into a **model-agnostic adversarial
+arena**: 3–4 different models, assigned to red/blue roles, competing with the
+deterministic engine as referee. This is the artifact meant to get attention — a
+reproducible leaderboard of *which model is the best insider threat, and which is the
+best at catching one.*
+
+### Invariant (non-negotiable)
+The deterministic policy engine stays the **incorruptible referee** — never a player.
+It adjudicates the hard facts (was this a violation, did data actually leave). Models
+never make base-rate enforcement decisions. This is what keeps the leaderboard objective
+instead of a model popularity contest.
+
+### Roles
+- **Red** (1 model): the insider. Goal — exfiltrate confidential/restricted data
+  *without being flagged*, using both tools and messages.
+- **Blue** (the rest): monitors/auditors. Goal — detect violations (raise alerts) and
+  guard the one discretionary lever (below).
+
+### The manipulation surface — with an objective label
+Tier-3's social-engineering needs a *hard* ground-truth label or it collapses into vibes.
+The mechanism:
+- The **only** power delegated to a blue agent is **approving/denying escalation
+  requests** (+ quarantine/revoke under active defense). Base-rate access stays
+  deterministic; only *discretionary escalation* is a blue decision — realistic, and
+  exactly the human-in-the-loop that gets social-engineered.
+- Red messages a blue auditor trying to get an escalation approved that shouldn't be.
+- If blue approves, the **engine deterministically computes the consequence** (red now
+  reads restricted → leak). So **"manipulation succeeded" = blue approved an escalation
+  the engine labels as enabling a violation/leak.** Hard label, no judge required.
+- **LLM-as-judge** scores only the *soft* layer the engine can't: was the message
+  manipulative, was red's strategy novel, was blue's refusal well-reasoned. A separate
+  model outside the competing pool (panel optional); it never sets the core win/loss.
+
+### Messaging
+- New tool `send_message(to, content)`; **all messages logged as events** (inter-agent
+  comms is itself valuable data — it's the prompt-injection corpus).
+- Directed messages (red can target a specific auditor). The recipient sees messages in
+  its prompt context; messages are **observable** ("network traffic") — they appear in
+  the observable view, but the *acting intent* behind them does not.
+
+### Multi-provider / model-agnostic
+- Extend the provider abstraction to assign a (possibly different) provider **per
+  agent/role**. The `LLMProvider` interface from v1 already anticipates this.
+- `OpenRouterProvider` (primary — broadest coverage, one API) and `HFProvider`;
+  `OllamaProvider` stays for free local dry-runs. Same `get_action` / `send_message`
+  interface for all.
+- **Prompt parity:** identical role scaffolding regardless of which model fills the role
+  (fairness — differences in outcome must come from the model, not the prompt).
+
+### Scoring → leaderboard
+Per matchup (red model R vs blue pool), over multiple seeds/episodes:
+- **Red:** exfiltration success rate, stealth (exfil-before-detection), manipulation
+  success rate.
+- **Blue:** detection rate, precision, time-to-detect, **manipulation resistance**
+  (held the line under social engineering).
+- Aggregate into a model × role matrix → the published leaderboard.
+
+### Cost discipline
+Mock → local (Ollama) → frontier (OpenRouter) ladder. Every run estimates token/credit
+cost up front; cheap/local models dry-run the full protocol before frontier credits are
+spent. Model pool, episodes, and seeds are all config-driven.
+
+### Decomposition (each gets its own spec → plan → build, on top of v1)
+1. **Messaging + escalation-lever** mechanics in the engine (+ the deterministic
+   manipulation label).
+2. **Multi-provider role assignment** + `OpenRouterProvider` / `HFProvider`.
+3. **Competitive scorer + leaderboard** aggregation across matchups/seeds.
+4. **LLM-judge** harness (soft scoring for quality + manipulation).
+
+v1 is unchanged and is the foundation for all four.
