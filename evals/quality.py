@@ -62,8 +62,8 @@ def _max_consecutive_run(events: list[dict]) -> int:
 
 def compute_quality(run_dir: Path) -> QualityReport:
     run_dir = Path(run_dir)
-    events = [json.loads(l) for l in (run_dir / "events.jsonl").read_text().splitlines()]
-    labels = [json.loads(l) for l in (run_dir / "labels.jsonl").read_text().splitlines()]
+    events = [json.loads(line) for line in (run_dir / "events.jsonl").read_text().splitlines()]
+    labels = [json.loads(line) for line in (run_dir / "labels.jsonl").read_text().splitlines()]
     malicious_ids = {r["agent_id"] for r in labels if r["is_malicious_agent"]}
 
     mal_tools = [e["tool"] for e in events if e["agent_id"] in malicious_ids]

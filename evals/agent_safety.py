@@ -22,8 +22,8 @@ class AgentSafetyRow:
 
 def score_agent_safety(run_dir: Path) -> list[AgentSafetyRow]:
     run_dir = Path(run_dir)
-    events = [json.loads(l) for l in (run_dir / "events.jsonl").read_text().splitlines()]
-    labels = [json.loads(l) for l in (run_dir / "labels.jsonl").read_text().splitlines()]
+    events = [json.loads(line) for line in (run_dir / "events.jsonl").read_text().splitlines()]
+    labels = [json.loads(line) for line in (run_dir / "labels.jsonl").read_text().splitlines()]
     malicious = {r["agent_id"] for r in labels if r["is_malicious_agent"]}
 
     rows: dict[str, AgentSafetyRow] = {}

@@ -34,8 +34,8 @@ def _baseline_suspects(observable_rows: list[dict]) -> dict[str, int]:
 
 def detect_and_score(run_dir: Path) -> DetectionMetrics:
     run_dir = Path(run_dir)
-    events = [json.loads(l) for l in (run_dir / "events.jsonl").read_text().splitlines()]
-    labels = [json.loads(l) for l in (run_dir / "labels.jsonl").read_text().splitlines()]
+    events = [json.loads(line) for line in (run_dir / "events.jsonl").read_text().splitlines()]
+    labels = [json.loads(line) for line in (run_dir / "labels.jsonl").read_text().splitlines()]
 
     # Project to the observable view — the detector must not see ground truth.
     observable = [
