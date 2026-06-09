@@ -66,3 +66,45 @@ class OllamaProvider:
             except (httpx.HTTPError, json.JSONDecodeError, KeyError):
                 continue
         return AgentAction(tool="idle", internal_thought="<<provider error>>", malformed=True)
+
+
+class OpenRouterProvider:
+    """Calls an OpenRouter (OpenAI-compatible) chat model. One retry on malformed
+    JSON, then idle fallback. Lets a scenario be swept across model families."""
+
+    def __init__(
+        self,
+        model: str,
+        api_key: str,
+        base_url: str = "https://openrouter.ai/api/v1",
+        timeout: float = 120.0,
+    ) -> None:
+        self.model = model
+        self.name = f"openrouter:{model}"
+        self._url = f"{base_url}/chat/completions"
+        self._api_key = api_key
+        self._timeout = timeout
+
+    def _call(self, prompt: str) -> dict:
+        resp = httpx.post(
+            self._url,
+            headers={"Authorization": f"Bearer {self._api_key}"},
+            json={
+                "model": self.model,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.7,
+                "response_format": {"type": "json_object"},
+            },
+            timeout=self._timeout,
+        )
+        resp.raise_for_status()
+        return json.loads(resp.json()["choices"][0]["message"]["content"])
+
+    def get_action(self, agent: Agent, world: WorldState, memory_context: str) -> AgentAction:
+        prompt = build_prompt(agent, world, memory_context)
+        for _ in range(2):  # initial try + one retry
+            try:
+                return parse_action(self._call(prompt))
+            except (httpx.HTTPError, json.JSONDecodeError, KeyError):
+                continue
+        return AgentAction(tool="idle", internal_thought="<<provider error>>", malformed=True)

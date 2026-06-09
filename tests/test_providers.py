@@ -1,6 +1,10 @@
+import json
+
+import httpx
+
 from tessera.world import Agent, WorldState, DataStore
 from tessera.schema import ActionParams, AgentAction
-from tessera.providers import MockProvider
+from tessera.providers import MockProvider, OpenRouterProvider
 
 
 def _world():
@@ -37,3 +41,57 @@ def test_mock_returns_independent_copies():
     first = p.get_action(eve, _world(), "")
     first.params.resource_id = "mutated"
     assert p.get_action(eve, _world(), "").params.resource_id == "d1"
+
+
+class _FakeResponse:
+    def __init__(self, content: str):
+        self._content = content
+
+    def raise_for_status(self):  # noqa: D401
+        return None
+
+    def json(self):
+        return {"choices": [{"message": {"content": self._content}}]}
+
+
+def test_openrouter_name_includes_model():
+    p = OpenRouterProvider(model="anthropic/claude-3.5-sonnet", api_key="sk-test")
+    assert p.name == "openrouter:anthropic/claude-3.5-sonnet"
+
+
+def test_openrouter_parses_chat_completion_content(monkeypatch):
+    captured = {}
+
+    def fake_post(url, **kwargs):
+        captured["url"] = url
+        captured["kwargs"] = kwargs
+        body = {"tool": "access_resource", "params": {"resource_id": "d1", "method": "read"}}
+        return _FakeResponse(json.dumps(body))
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    p = OpenRouterProvider(model="meta-llama/llama-3.1-8b-instruct", api_key="sk-test")
+    action = p.get_action(_world().agents[0], _world(), "")
+
+    assert action.tool == "access_resource"
+    assert action.params.resource_id == "d1"
+    assert captured["url"].endswith("/chat/completions")
+    assert captured["kwargs"]["headers"]["Authorization"] == "Bearer sk-test"
+    payload = captured["kwargs"]["json"]
+    assert payload["model"] == "meta-llama/llama-3.1-8b-instruct"
+    assert payload["messages"][0]["role"] == "user"
+
+
+def test_openrouter_retries_then_idle_fallback_on_malformed(monkeypatch):
+    calls = {"n": 0}
+
+    def fake_post(url, **kwargs):
+        calls["n"] += 1
+        return _FakeResponse("not json at all")
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    p = OpenRouterProvider(model="x/y", api_key="sk-test")
+    action = p.get_action(_world().agents[0], _world(), "")
+
+    assert action.tool == "idle"
+    assert action.malformed is True
+    assert calls["n"] == 2  # initial try + one retry

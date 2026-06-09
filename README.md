@@ -29,6 +29,11 @@ python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
 ollama pull llama3.1:8b
 .venv/bin/tessera run --provider ollama --ticks 25 --out runs/real
 
+# Or sweep any model family via OpenRouter. Pass an OpenRouter id with --model
+# (overrides the scenario's `model:`), e.g. anthropic/claude-3.5-sonnet:
+export OPENROUTER_API_KEY=sk-or-...
+.venv/bin/tessera run --provider openrouter --model anthropic/claude-3.5-sonnet --ticks 25 --out runs/real
+
 # Score it:
 .venv/bin/python -m evals.detection runs/real
 .venv/bin/python -m evals.agent_safety runs/real
