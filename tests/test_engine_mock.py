@@ -37,6 +37,30 @@ def test_manifest_is_valid_and_records_config(tmp_path: Path):
     assert set(manifest.agent_ids) == {f"agent-{i}" for i in range(1, 6)}
 
 
+class _ModelStubProvider(MockProvider):
+    """A provider that reports an effective model id (as ollama/openrouter do)."""
+
+    def __init__(self, model: str) -> None:
+        super().__init__()
+        self.model = model
+        self.name = f"stub:{model}"
+
+
+def test_manifest_records_effective_provider_model_not_cfg_default(tmp_path: Path):
+    cfg = load_scenario(Path("configs/scenario_default.yaml"))  # cfg.model == "llama3.1:8b"
+    provider = _ModelStubProvider(model="anthropic/claude-3.5-sonnet")
+    out = run(cfg, provider, out_dir=tmp_path, n_ticks=1)
+    manifest = Manifest.model_validate_json((out / "manifest.json").read_text())
+    assert manifest.model == "anthropic/claude-3.5-sonnet"
+
+
+def test_manifest_falls_back_to_cfg_model_when_provider_has_none(tmp_path: Path):
+    cfg = load_scenario(Path("configs/scenario_default.yaml"))
+    out = run(cfg, MockProvider(), out_dir=tmp_path, n_ticks=1)
+    manifest = Manifest.model_validate_json((out / "manifest.json").read_text())
+    assert manifest.model == cfg.model
+
+
 def test_events_are_schema_valid_and_capture_the_leak(tmp_path: Path):
     cfg = load_scenario(Path("configs/scenario_default.yaml"))
     out = run(cfg, _scripted_provider(), out_dir=tmp_path, n_ticks=2)

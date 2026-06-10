@@ -89,7 +89,7 @@ def run(
         scenario_name=cfg.name,
         seed=cfg.seed,
         provider=provider.name,
-        model=cfg.model,
+        model=getattr(provider, "model", None) or cfg.model,
         n_ticks=n_ticks,
         agent_ids=[a.id for a in world.agents],
         policy_version=POLICY_VERSION,
