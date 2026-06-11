@@ -41,3 +41,14 @@ def test_build_provider_model_override_beats_cfg():
 def test_build_provider_uses_cfg_model_when_no_override():
     p = build_provider("ollama", _cfg("llama3.1:8b"), model=None)
     assert p.model == "llama3.1:8b"
+
+
+def test_main_seed_override_flows_to_manifest(tmp_path):
+    from tessera.cli import main
+    from tessera.schema import Manifest
+
+    out = tmp_path / "run"
+    rc = main(["run", "--provider", "mock", "--seed", "123", "--ticks", "1", "--out", str(out)])
+    assert rc == 0
+    manifest = Manifest.model_validate_json((out / "manifest.json").read_text())
+    assert manifest.seed == 123

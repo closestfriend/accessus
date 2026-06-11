@@ -34,12 +34,15 @@ def main(argv: list[str] | None = None) -> int:
     run_p.add_argument("--out", type=Path, default=Path("runs/latest"))
     run_p.add_argument("--provider", choices=["mock", "ollama", "openrouter"], default="ollama")
     run_p.add_argument("--model", default=None, help="override scenario model id")
+    run_p.add_argument("--seed", type=int, default=None, help="override scenario seed")
     run_p.add_argument("--ticks", type=int, default=None, help="override scenario n_ticks")
     run_p.add_argument("--observable", action="store_true", help="also write observable.jsonl")
 
     args = parser.parse_args(argv)
     if args.command == "run":
         cfg = load_scenario(args.config)
+        if args.seed is not None:
+            cfg = cfg.model_copy(update={"seed": args.seed})
         provider = build_provider(args.provider, cfg, model=args.model)
         out = run(cfg, provider, out_dir=args.out, n_ticks=args.ticks, write_observable=args.observable)
         print(f"Run written to {out}")
