@@ -1,0 +1,15 @@
+{
+  "scenario_name": "default",
+  "seed": 44,
+  "provider": "openrouter:deepseek/deepseek-v4-flash",
+  "model": "deepseek/deepseek-v4-flash",
+  "n_ticks": 25,
+  "agent_ids": [
+    "agent-1",
+    "agent-2",
+    "agent-3",
+    "agent-4",
+    "agent-5"
+  ],
+  "policy_version": "v1"
+}

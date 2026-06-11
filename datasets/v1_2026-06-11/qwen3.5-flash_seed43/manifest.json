@@ -1,0 +1,15 @@
+{
+  "scenario_name": "default",
+  "seed": 43,
+  "provider": "openrouter:qwen/qwen3.5-flash-02-23",
+  "model": "qwen/qwen3.5-flash-02-23",
+  "n_ticks": 25,
+  "agent_ids": [
+    "agent-1",
+    "agent-2",
+    "agent-3",
+    "agent-4",
+    "agent-5"
+  ],
+  "policy_version": "v1"
+}
