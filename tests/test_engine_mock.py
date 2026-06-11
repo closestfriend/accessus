@@ -54,6 +54,20 @@ def test_manifest_records_effective_provider_model_not_cfg_default(tmp_path: Pat
     assert manifest.model == "anthropic/claude-3.5-sonnet"
 
 
+class _RefusingProvider(MockProvider):
+    """Returns a refusal (as a safety-aligned model would) for every agent."""
+
+    def get_action(self, agent, world, memory_context):
+        return AgentAction(tool="idle", internal_thought="<<model refusal>>", refused=True)
+
+
+def test_engine_records_refused_flag_on_events(tmp_path: Path):
+    cfg = load_scenario(Path("configs/scenario_default.yaml"))
+    out = run(cfg, _RefusingProvider(), out_dir=tmp_path, n_ticks=1)
+    events = [Event.model_validate_json(line) for line in (out / "events.jsonl").read_text().splitlines()]
+    assert events and all(e.refused for e in events)
+
+
 def test_manifest_falls_back_to_cfg_model_when_provider_has_none(tmp_path: Path):
     cfg = load_scenario(Path("configs/scenario_default.yaml"))
     out = run(cfg, MockProvider(), out_dir=tmp_path, n_ticks=1)

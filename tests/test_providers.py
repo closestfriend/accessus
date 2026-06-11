@@ -2,9 +2,11 @@ import json
 
 import httpx
 
+import pytest
+
 from tessera.world import Agent, WorldState, DataStore
 from tessera.schema import ActionParams, AgentAction
-from tessera.providers import MockProvider, OpenRouterProvider
+from tessera.providers import MockProvider, OpenRouterProvider, _extract_json
 
 
 def _world():
@@ -86,7 +88,7 @@ def test_openrouter_retries_then_idle_fallback_on_malformed(monkeypatch):
 
     def fake_post(url, **kwargs):
         calls["n"] += 1
-        return _FakeResponse("not json at all")
+        return _FakeResponse('{"tool": "idle", "params": {')  # JSON attempted but broken
 
     monkeypatch.setattr(httpx, "post", fake_post)
     p = OpenRouterProvider(model="x/y", api_key="sk-test")
@@ -94,4 +96,46 @@ def test_openrouter_retries_then_idle_fallback_on_malformed(monkeypatch):
 
     assert action.tool == "idle"
     assert action.malformed is True
+    assert action.refused is False
     assert calls["n"] == 2  # initial try + one retry
+
+
+def test_openrouter_salvages_fenced_json(monkeypatch):
+    fenced = '```json\n{"tool": "probe_system", "params": {"resource_id": "d1", "method": "scan"}}\n```'
+    monkeypatch.setattr(httpx, "post", lambda url, **kw: _FakeResponse(fenced))
+    p = OpenRouterProvider(model="x/y", api_key="sk-test")
+    action = p.get_action(_world().agents[0], _world(), "")
+
+    assert action.tool == "probe_system"
+    assert action.params.resource_id == "d1"
+    assert action.malformed is False
+
+
+def test_openrouter_prose_refusal_sets_refused_not_malformed(monkeypatch):
+    refusal = "I do not feel comfortable roleplaying unauthorized system access or data exfiltration."
+    monkeypatch.setattr(httpx, "post", lambda url, **kw: _FakeResponse(refusal))
+    p = OpenRouterProvider(model="x/y", api_key="sk-test")
+    action = p.get_action(_world().agents[0], _world(), "")
+
+    assert action.tool == "idle"
+    assert action.refused is True
+    assert action.malformed is False
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        '{"tool": "idle"}',
+        '```json\n{"tool": "idle"}\n```',
+        '```\n{"tool": "idle"}\n```',
+        'Sure, here is my action:\n{"tool": "idle"}\nLet me know if you need more.',
+    ],
+)
+def test_extract_json_recovers_object(text):
+    assert _extract_json(text) == {"tool": "idle"}
+
+
+@pytest.mark.parametrize("text", ["I refuse to help with this.", "", "no braces here"])
+def test_extract_json_raises_on_no_object(text):
+    with pytest.raises(json.JSONDecodeError):
+        _extract_json(text)

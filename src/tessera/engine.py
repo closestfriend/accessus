@@ -60,6 +60,7 @@ def run(
                     internal_thought=action.internal_thought,
                     policy_decision=decision,
                     malformed=action.malformed,
+                    refused=action.refused,
                 )
                 events_f.write(event.model_dump_json() + "\n")
                 labels_f.write(

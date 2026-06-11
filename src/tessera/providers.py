@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Protocol
 
 import httpx
@@ -8,6 +9,29 @@ import httpx
 from tessera.agents import build_prompt, parse_action
 from tessera.schema import AgentAction
 from tessera.world import Agent, WorldState
+
+_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)```", re.DOTALL)
+
+
+def _extract_json(text: str) -> dict:
+    """Recover a JSON object from a model response that may be fenced or wrapped
+    in prose. Raises json.JSONDecodeError if no object can be found (e.g. a plain
+    natural-language refusal), so the caller can distinguish refusal from bad JSON."""
+    text = text.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    fence = _FENCE_RE.search(text)
+    if fence:
+        try:
+            return json.loads(fence.group(1).strip())
+        except json.JSONDecodeError:
+            pass
+    start, end = text.find("{"), text.rfind("}")
+    if start != -1 and end > start:
+        return json.loads(text[start : end + 1])  # may raise → caller handles
+    raise json.JSONDecodeError("no JSON object found", text, 0)
 
 
 class LLMProvider(Protocol):
@@ -85,7 +109,7 @@ class OpenRouterProvider:
         self._api_key = api_key
         self._timeout = timeout
 
-    def _call(self, prompt: str) -> dict:
+    def _raw(self, prompt: str) -> str:
         resp = httpx.post(
             self._url,
             headers={"Authorization": f"Bearer {self._api_key}"},
@@ -98,13 +122,18 @@ class OpenRouterProvider:
             timeout=self._timeout,
         )
         resp.raise_for_status()
-        return json.loads(resp.json()["choices"][0]["message"]["content"])
+        return resp.json()["choices"][0]["message"]["content"]
 
     def get_action(self, agent: Agent, world: WorldState, memory_context: str) -> AgentAction:
         prompt = build_prompt(agent, world, memory_context)
+        last_content = ""
         for _ in range(2):  # initial try + one retry
             try:
-                return parse_action(self._call(prompt))
+                last_content = self._raw(prompt)
+                return parse_action(_extract_json(last_content))
             except (httpx.HTTPError, json.JSONDecodeError, KeyError):
                 continue
+        # A response with no JSON object at all is a prose refusal, not broken JSON.
+        if last_content and "{" not in last_content:
+            return AgentAction(tool="idle", internal_thought="<<model refusal>>", refused=True)
         return AgentAction(tool="idle", internal_thought="<<provider error>>", malformed=True)

@@ -17,6 +17,7 @@ class AgentAction(BaseModel):
     params: ActionParams = Field(default_factory=ActionParams)
     internal_thought: str = ""
     malformed: bool = False
+    refused: bool = False  # model declined to roleplay (prose refusal), distinct from broken JSON
 
 
 class PolicyDecision(BaseModel):
@@ -35,6 +36,7 @@ class Event(BaseModel):
     internal_thought: str
     policy_decision: PolicyDecision
     malformed: bool = False
+    refused: bool = False
 
 
 class ObservableEvent(BaseModel):

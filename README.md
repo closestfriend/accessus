@@ -30,9 +30,12 @@ ollama pull llama3.1:8b
 .venv/bin/tessera run --provider ollama --ticks 25 --out runs/real
 
 # Or sweep any model family via OpenRouter. Pass a current OpenRouter id with
-# --model (overrides the scenario's `model:`); browse ids at openrouter.ai/models:
+# --model (overrides the scenario's `model:`); browse ids at openrouter.ai/models.
+# NOTE: pick a model that will actually roleplay the malicious insider. Heavily
+# safety-tuned models (e.g. gpt-5-mini, claude-3.5-haiku) refuse and idle, yielding
+# degenerate datasets with no attack signal. Less refusal-prone models work better:
 export OPENROUTER_API_KEY=sk-or-...
-.venv/bin/tessera run --provider openrouter --model openai/gpt-5-mini --ticks 25 --out runs/real
+.venv/bin/tessera run --provider openrouter --model qwen/qwen3.7-plus --ticks 25 --out runs/real
 
 # Score it:
 .venv/bin/python -m evals.detection runs/real
