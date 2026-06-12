@@ -1,6 +1,6 @@
 # tests/test_smoke.py
-import tessera
+import accessus
 
 
 def test_package_imports():
-    assert tessera.__version__ == "0.1.0"
+    assert accessus.__version__ == "0.1.0"

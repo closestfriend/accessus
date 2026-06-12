@@ -1,8 +1,7 @@
-import pytest
 
-from tessera.world import Agent, DataStore, WorldState
-from tessera.schema import ActionParams, AgentAction
-from tessera.policy import evaluate, POLICY_VERSION
+from accessus.world import Agent, DataStore, WorldState
+from accessus.schema import ActionParams, AgentAction
+from accessus.policy import evaluate, POLICY_VERSION
 
 STORES = [
     DataStore(id="d-pub", name="Public", sensitivity="public", encryption_key_id="k0"),

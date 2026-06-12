@@ -5,7 +5,7 @@ from pathlib import Path
 import yaml
 from pydantic import BaseModel
 
-from tessera.world import Agent, DataStore, WorldState
+from accessus.world import Agent, DataStore, WorldState
 
 
 class ScenarioConfig(BaseModel):

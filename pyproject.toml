@@ -1,25 +1,46 @@
 [project]
-name = "tessera"
+name = "accessus"
 version = "0.1.0"
-description = "Multi-agent access-control simulation that generates labeled security datasets"
+description = "Multi-agent access-control simulation that generates labeled insider-threat datasets"
+readme = "README.md"
 requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [{ name = "Hunter Karman", email = "hnkarman@gmail.com" }]
+keywords = ["security", "insider-threat", "synthetic-data", "llm-agents", "access-control", "simulation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = ["pydantic>=2.6", "PyYAML>=6.0", "httpx>=0.27"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.4"]
 
+[project.urls]
+Homepage = "https://github.com/closestfriend/accessus"
+Repository = "https://github.com/closestfriend/accessus"
+
 [project.scripts]
-tessera = "tessera.cli:main"
+accessus = "accessus.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/tessera"]
+packages = ["src/accessus"]
+exclude = ["**/.claude", "**/__pycache__"]
+
+[tool.hatch.build.targets.sdist]
+# Ship the source package + project docs; keep the corpus and dev scratch out.
+exclude = ["/datasets", "/runs", "/docs", "/.claude", "/.github"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src", "."]
+pythonpath = ["src"]
 testpaths = ["tests"]
 
 [tool.ruff]

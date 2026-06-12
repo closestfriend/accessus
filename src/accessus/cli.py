@@ -1,4 +1,4 @@
-# src/tessera/cli.py
+# src/accessus/cli.py
 from __future__ import annotations
 
 import argparse
@@ -6,9 +6,9 @@ import os
 import sys
 from pathlib import Path
 
-from tessera.config import ScenarioConfig, load_scenario
-from tessera.engine import run
-from tessera.providers import LLMProvider, MockProvider, OllamaProvider, OpenRouterProvider
+from accessus.config import ScenarioConfig, load_scenario
+from accessus.engine import run
+from accessus.providers import LLMProvider, MockProvider, OllamaProvider, OpenRouterProvider
 
 
 def build_provider(name: str, cfg: ScenarioConfig, model: str | None = None) -> LLMProvider:
@@ -26,7 +26,7 @@ def build_provider(name: str, cfg: ScenarioConfig, model: str | None = None) -> 
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="tessera")
+    parser = argparse.ArgumentParser(prog="accessus")
     sub = parser.add_subparsers(dest="command", required=True)
 
     run_p = sub.add_parser("run", help="run a simulation and write a labeled dataset")

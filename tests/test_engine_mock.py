@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
 
-from tessera.config import load_scenario
-from tessera.schema import ActionParams, AgentAction, Event, ObservableEvent, Manifest
-from tessera.providers import MockProvider
-from tessera.engine import run
+from accessus.config import load_scenario
+from accessus.schema import ActionParams, AgentAction, Event, ObservableEvent, Manifest
+from accessus.providers import MockProvider
+from accessus.engine import run
 
 
 def _scripted_provider() -> MockProvider:

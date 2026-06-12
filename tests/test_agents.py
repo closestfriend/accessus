@@ -1,5 +1,5 @@
-from tessera.world import Agent, DataStore, WorldState
-from tessera.agents import build_prompt, parse_action
+from accessus.world import Agent, DataStore, WorldState
+from accessus.agents import build_prompt, parse_action
 
 
 def _world():

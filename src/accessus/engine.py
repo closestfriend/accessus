@@ -3,12 +3,12 @@ from __future__ import annotations
 import random
 from pathlib import Path
 
-from tessera.config import ScenarioConfig
-from tessera.memory import MemoryStore
-from tessera.policy import POLICY_VERSION, evaluate
-from tessera.providers import LLMProvider
-from tessera.schema import Event, LabelRow, Manifest, to_observable
-from tessera.world import WorldState
+from accessus.config import ScenarioConfig
+from accessus.memory import MemoryStore
+from accessus.policy import POLICY_VERSION, evaluate
+from accessus.providers import LLMProvider
+from accessus.schema import Event, LabelRow, Manifest, to_observable
+from accessus.world import WorldState
 
 
 def _format_memory_line(event: Event) -> str:

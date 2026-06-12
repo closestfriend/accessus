@@ -1,4 +1,4 @@
-from tessera.world import Agent, DataStore, WorldState, SENSITIVITY_ORDER
+from accessus.world import Agent, DataStore, WorldState, SENSITIVITY_ORDER
 
 
 def test_sensitivity_order_is_monotonic():

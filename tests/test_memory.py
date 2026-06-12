@@ -1,4 +1,4 @@
-from tessera.memory import MemoryStore
+from accessus.memory import MemoryStore
 
 
 def test_recent_is_capped_at_max_recent():

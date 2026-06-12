@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from tessera.config import load_scenario
-from tessera.schema import ActionParams, AgentAction
-from tessera.providers import MockProvider
-from tessera.engine import run
-from evals.quality import distinct_n, compute_quality
+from accessus.config import load_scenario
+from accessus.schema import ActionParams, AgentAction
+from accessus.providers import MockProvider
+from accessus.engine import run
+from accessus.evals.quality import distinct_n, compute_quality
 
 
 def test_distinct_n_measures_diversity():

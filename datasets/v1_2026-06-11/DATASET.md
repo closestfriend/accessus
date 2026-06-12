@@ -1,4 +1,4 @@
-# Tessera Dataset — v1 (2026-06-11)
+# Accessus Dataset — v1 (2026-06-11)
 
 A labeled, multi-agent access-control simulation corpus for training and
 evaluating **insider-threat / anomaly detectors**. Each run is one episode of

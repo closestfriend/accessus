@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from tessera.schema import AgentAction, PolicyDecision
-from tessera.world import Agent, WorldState, SENSITIVITY_ORDER
+from accessus.schema import AgentAction, PolicyDecision
+from accessus.world import Agent, WorldState, SENSITIVITY_ORDER
 
 POLICY_VERSION = "v1"
 

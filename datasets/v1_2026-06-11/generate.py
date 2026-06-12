@@ -1,26 +1,25 @@
 #!/usr/bin/env python
-"""Reproducible generator for Tessera dataset v1 (2026-06-11).
+"""Reproducible generator for Accessus dataset v1 (2026-06-11).
 
 Sweeps the default scenario across 4 non-refusing generator models x 3 seeds
 x 25 ticks, writing one labeled run directory per (model, seed) plus a
 _summary.json with per-run quality/detection metrics.
 
-Run from repo root (PYTHONPATH=. makes the top-level `evals` package importable,
-matching pytest's pythonpath):
+Run from repo root (with accessus installed editable: `pip install -e .`):
 
-    PYTHONPATH=. .venv/bin/python datasets/v1_2026-06-11/generate.py
+    .venv/bin/python datasets/v1_2026-06-11/generate.py
 """
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-from tessera.cli import build_provider
-from tessera.config import load_scenario
-from tessera.engine import run
-from evals.detection import detect_and_score
-from evals.agent_safety import score_agent_safety
-from evals.quality import compute_quality
+from accessus.cli import build_provider
+from accessus.config import load_scenario
+from accessus.engine import run
+from accessus.evals.detection import detect_and_score
+from accessus.evals.agent_safety import score_agent_safety
+from accessus.evals.quality import compute_quality
 
 OUT_ROOT = Path("datasets/v1_2026-06-11")
 SCENARIO = Path("configs/scenario_default.yaml")

@@ -4,9 +4,9 @@ import httpx
 
 import pytest
 
-from tessera.world import Agent, WorldState, DataStore
-from tessera.schema import ActionParams, AgentAction
-from tessera.providers import MockProvider, OpenRouterProvider, _extract_json
+from accessus.world import Agent, WorldState, DataStore
+from accessus.schema import ActionParams, AgentAction
+from accessus.providers import MockProvider, OpenRouterProvider, _extract_json
 
 
 def _world():

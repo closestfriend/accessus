@@ -1,12 +1,12 @@
 # tests/test_evals.py
 from pathlib import Path
 
-from tessera.config import load_scenario
-from tessera.schema import ActionParams, AgentAction
-from tessera.providers import MockProvider
-from tessera.engine import run
-from evals.detection import detect_and_score
-from evals.agent_safety import score_agent_safety
+from accessus.config import load_scenario
+from accessus.schema import ActionParams, AgentAction
+from accessus.providers import MockProvider
+from accessus.engine import run
+from accessus.evals.detection import detect_and_score
+from accessus.evals.agent_safety import score_agent_safety
 
 
 def _run(tmp_path: Path) -> Path:

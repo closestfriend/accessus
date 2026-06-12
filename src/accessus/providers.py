@@ -6,9 +6,9 @@ from typing import Protocol
 
 import httpx
 
-from tessera.agents import build_prompt, parse_action
-from tessera.schema import AgentAction
-from tessera.world import Agent, WorldState
+from accessus.agents import build_prompt, parse_action
+from accessus.schema import AgentAction
+from accessus.world import Agent, WorldState
 
 _FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)```", re.DOTALL)
 

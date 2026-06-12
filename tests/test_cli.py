@@ -1,8 +1,8 @@
 import pytest
 
-from tessera.cli import build_provider
-from tessera.config import ScenarioConfig
-from tessera.providers import MockProvider, OllamaProvider, OpenRouterProvider
+from accessus.cli import build_provider
+from accessus.config import ScenarioConfig
+from accessus.providers import MockProvider, OllamaProvider, OpenRouterProvider
 
 
 def _cfg(model: str = "llama3.1:8b") -> ScenarioConfig:
@@ -44,8 +44,8 @@ def test_build_provider_uses_cfg_model_when_no_override():
 
 
 def test_main_seed_override_flows_to_manifest(tmp_path):
-    from tessera.cli import main
-    from tessera.schema import Manifest
+    from accessus.cli import main
+    from accessus.schema import Manifest
 
     out = tmp_path / "run"
     rc = main(["run", "--provider", "mock", "--seed", "123", "--ticks", "1", "--out", str(out)])

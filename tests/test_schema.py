@@ -1,5 +1,5 @@
-from tessera.schema import (
-    ActionParams, AgentAction, PolicyDecision, Event, ObservableEvent, to_observable,
+from accessus.schema import (
+    ActionParams, AgentAction, PolicyDecision, Event, to_observable,
 )
 
 

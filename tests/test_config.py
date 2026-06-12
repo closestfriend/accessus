@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from tessera.config import load_scenario
+from accessus.config import load_scenario
 
 
 def test_load_default_scenario_builds_world():

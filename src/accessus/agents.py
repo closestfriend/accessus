@@ -1,10 +1,10 @@
-# src/tessera/agents.py
+# src/accessus/agents.py
 from __future__ import annotations
 
 from pydantic import ValidationError
 
-from tessera.schema import AgentAction
-from tessera.world import Agent, WorldState
+from accessus.schema import AgentAction
+from accessus.world import Agent, WorldState
 
 TOOLS_DOC = (
     "- access_resource: read/write a resource (params: resource_id, method)\n"
