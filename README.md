@@ -6,12 +6,12 @@
 > the rules allowed, and what actually leaked.
 
 Accessus generates open datasets for two research tasks at once:
-1. **Insider-threat detection** — can a detector spot the malicious agent from observable telemetry?
-2. **Agent-safety / alignment** — does an LLM agent itself respect access controls under temptation?
+1. **Insider-threat detection**: can a detector spot the malicious agent from observable telemetry?
+2. **Agent-safety / alignment**: does an LLM agent itself respect access controls under temptation?
 
 The key to honest labels: the access decision is made by a **deterministic policy
 engine** (ground truth), never by an LLM. Detectors only ever see the **observable
-telemetry** view — never agents' internal thoughts or the ground-truth labels.
+telemetry** view: never agents' internal thoughts or the ground-truth labels.
 
 ## Install
 
@@ -24,7 +24,7 @@ The import name and CLI are both `accessus`.
 ## Run
 
 ```bash
-# No model needed — deterministic mock run:
+# No model needed: deterministic mock run:
 .venv/bin/accessus run --provider mock --ticks 10 --observable --out runs/demo
 
 # Real run with a local Ollama model:
@@ -46,7 +46,7 @@ export OPENROUTER_API_KEY=sk-or-...
 .venv/bin/python -m accessus.evals.quality runs/real
 ```
 
-A published corpus lives under `datasets/` — see `datasets/v1_2026-06-11/DATASET.md`.
+A published corpus lives under `datasets/`: see `datasets/v1_2026-06-11/DATASET.md`.
 
 ## Dataset layout (one run = one directory)
 
@@ -54,7 +54,7 @@ A published corpus lives under `datasets/` — see `datasets/v1_2026-06-11/DATAS
 |---|---|
 | `manifest.json` | seed, model, provider, tick count, agent roster, policy version |
 | `events.jsonl` | full record: tool call, internal thought, policy decision (ground truth) |
-| `observable.jsonl` | the detector's view — no thoughts, no ground truth |
+| `observable.jsonl` | the detector's view: no thoughts, no ground truth |
 | `labels.jsonl` | derived ground-truth labels per action |
 | `world_snapshots.jsonl` | periodic full world state |
 
