@@ -24,7 +24,7 @@ The import name and CLI are both `accessus`.
 ## Run
 
 ```bash
-# No model needed: deterministic mock run:
+# Deterministic mock run, no model needed:
 .venv/bin/accessus run --provider mock --ticks 10 --observable --out runs/demo
 
 # Real run with a local Ollama model:
@@ -46,7 +46,7 @@ export OPENROUTER_API_KEY=sk-or-...
 .venv/bin/python -m accessus.evals.quality runs/real
 ```
 
-A published corpus lives under `datasets/`: see `datasets/v1_2026-06-11/DATASET.md`.
+A published corpus lives under `datasets/` (see `datasets/v1_2026-06-11/DATASET.md`).
 
 ## Dataset layout (one run = one directory)
 
